@@ -112,7 +112,6 @@ public class TabMusic extends Fragment implements MediaPlayerControl {
         musicSrv.playSong();
         if (playbackPaused) {
             Log.d(TAG, "songPicked, playpackPaused");
-//            setController();
             playbackPaused = false;
         }
         controller.show();
@@ -139,25 +138,6 @@ public class TabMusic extends Fragment implements MediaPlayerControl {
         }
     }
 
-//    public void setController() {
-//        //set the controller up
-//        controller = new MusicController(getContext(), false);
-//        controller.setPrevNextListeners(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                playNext();
-//            }
-//        }, new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                playPrev();
-//            }
-//        });
-//        controller.setMediaPlayer(this);
-//        controller.setAnchorView(view.findViewById(R.id.song_list));
-//        controller.setEnabled(true);
-//    }
-
     public void playNext() {
         Log.d(TAG, "playNext");
         musicSrv.playNext();
@@ -168,7 +148,6 @@ public class TabMusic extends Fragment implements MediaPlayerControl {
 
         if (playbackPaused) {
             Log.d(TAG, "playbackpaused!!");
-//            setController();
             playbackPaused = false;
         }
         controller.show();
@@ -184,7 +163,6 @@ public class TabMusic extends Fragment implements MediaPlayerControl {
 
         if (playbackPaused) {
             Log.d(TAG, "playbackpaused!!");
-//            setController();
             playbackPaused = false;
         }
         controller.show();

@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -31,7 +32,8 @@ import java.util.Calendar;
  */
 public class TabWeather extends Fragment {
 
-    final String TAG = "TabWeather";
+    private static final String TAG = "TabWeather";
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 200;
 
     GoogleApiClient googleApiClient;
 
@@ -59,11 +61,30 @@ public class TabWeather extends Fragment {
 
     @Override
     public void onResume() {
-        googleApiconnect();
         super.onResume();
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        } else {
+            checkGoogleApiClient();
+        }
     }
 
-    private void googleApiconnect() {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    checkGoogleApiClient();
+                }
+            }
+        }
+    }
+
+    private void checkGoogleApiClient() {
         if (googleApiClient != null) {
             if (googleApiClient.isConnected()) {
                 // 이미 연결되어 있다면 바로 위치 가져온다.
@@ -95,20 +116,19 @@ public class TabWeather extends Fragment {
     }
 
     private void getLocation() {
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-                if (location != null) {
-                    Log.d(TAG, String.format("update location ; (%f,%f)", location.getLatitude(), location.getLongitude()));
-                    latitude = location.getLatitude();
-                    tvLatitude.setText("lat : " + latitude);
-                    longitude = location.getLongitude();
-                    tvLongitude.setText("lon : " + longitude);
-                }
-                WeatherInfoAsyncTask task = new WeatherInfoAsyncTask();
-                task.execute();
+        try {
+            Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+            if (location != null) {
+                Log.d(TAG, String.format("update location ; (%f,%f)", location.getLatitude(), location.getLongitude()));
+                latitude = location.getLatitude();
+                tvLatitude.setText("lat : " + latitude);
+                longitude = location.getLongitude();
+                tvLongitude.setText("lon : " + longitude);
             }
+            WeatherInfoAsyncTask task = new WeatherInfoAsyncTask();
+            task.execute();
+        } catch (SecurityException e) {
+            e.printStackTrace();
         }
     }
 
@@ -165,11 +185,11 @@ public class TabWeather extends Fragment {
         try {
             JSONObject jsonObject = new JSONObject(response);
             Log.d(TAG, "parseJson : " + jsonObject);
-            JSONArray weatherArray = (JSONArray)jsonObject.get("weather");
+            JSONArray weatherArray = (JSONArray) jsonObject.get("weather");
             int length = weatherArray.length();
             StringBuilder builder = new StringBuilder();
-            while(length > 0) {
-                builder.append(weatherArray.getJSONObject(length-1).get("description"));
+            while (length > 0) {
+                builder.append(weatherArray.getJSONObject(length - 1).get("description"));
                 if (length != 1) {
                     builder.append(" & ");
                 }
@@ -178,12 +198,12 @@ public class TabWeather extends Fragment {
             String desc = builder.toString();
             tvDescription.setText(desc);
 
-            JSONObject main = (JSONObject)jsonObject.get("main");
+            JSONObject main = (JSONObject) jsonObject.get("main");
             int intTemp = 0;
             if (main.get("temp") instanceof Double) {
-                intTemp = (int)(double)main.get("temp");
+                intTemp = (int) (double) main.get("temp");
             } else if (main.get("temp") instanceof Integer) {
-                intTemp = (int)main.get("temp");
+                intTemp = (int) main.get("temp");
             }
             String temp = String.valueOf(intTemp);
             tvTemperature.setText(temp + " \u2103");
@@ -192,7 +212,7 @@ public class TabWeather extends Fragment {
             String formattedTime = String.format("Requested at %1$Tp %1$tI:%1$tM:%1$tS", time);
             tvRequestedTime.setText(formattedTime);
             // Set length to 3
-            while(temp.length() != 3) {
+            while (temp.length() != 3) {
                 temp = "0" + temp;
             }
             // Send BluetoothService
